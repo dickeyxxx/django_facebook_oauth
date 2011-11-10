@@ -7,8 +7,10 @@ from models import FacebookProfile
 # We want to display our facebook profile, not the default user
 admin.site.unregister(User)
 
+
 class FacebookProfileInline(admin.StackedInline):
     model = FacebookProfile
+
 
 class FacebookProfileAdmin(UserAdmin):
     inlines = [FacebookProfileInline]
