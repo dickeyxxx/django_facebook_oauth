@@ -14,14 +14,13 @@ def login(request):
     args = {
         'client_id': settings.FACEBOOK_APP_ID,
         'scope': settings.FACEBOOK_SCOPE,
-        'redirect_uri': request.build_absolute_uri(
-                                        '/facebook/authentication_callback'),
+        'redirect_uri': request.build_absolute_uri(reverse('facebook-callback')),
     }
     return HttpResponseRedirect('https://www.facebook.com/dialog/oauth?'
                                                     + urllib.urlencode(args))
 
 
-def authentication_callback(request):
+def callback(request):
     """ Second step of the login process.
     It reads in a code from Facebook, then redirects back to the home page. """
     code = request.GET.get('code')

@@ -5,6 +5,7 @@ import json
 from django.conf import settings
 from django.contrib.auth.models import User, AnonymousUser
 from django.db import IntegrityError
+from django.core.urlresolvers import reverse
 
 from facebook.models import FacebookProfile
 
@@ -17,7 +18,7 @@ class FacebookBackend:
             'client_id': settings.FACEBOOK_APP_ID,
             'client_secret': settings.FACEBOOK_APP_SECRET,
             'redirect_uri': request.build_absolute_uri(
-                                        '/facebook/authentication_callback'),
+                                            reverse('facebook-callback')),
             'code': token,
         }
 
@@ -37,18 +38,11 @@ class FacebookBackend:
             # Try and find existing user
             fb_user = FacebookProfile.objects.get(facebook_id=fb_profile['id'])
             user = fb_user.user
-
             # Update access_token
             fb_user.access_token = access_token
             fb_user.save()
-
         except FacebookProfile.DoesNotExist:
             # No existing user
-
-            # Not all users have usernames
-            username = fb_profile.get('username',
-                                      fb_profile['email'].split('@')[0])
-
             if getattr(settings, 'FACEBOOK_FORCE_SIGNUP', False):
                 # No existing user, use anonymous
                 user = AnonymousUser()
@@ -60,19 +54,15 @@ class FacebookBackend:
                         access_token=access_token
                 )
                 user.facebookprofile = fb_user
-
             else:
                 # No existing user, create one
-
-                try:
-                    user = User.objects.create_user(username,
-                                                    fb_profile['email'])
-                except IntegrityError:
-                    # Username already exists, make it unique
-                    user = User.objects.create_user(
-                            username + fb_profile['id'], fb_profile['email'])
+                user = User.objects.create_user(fb_profile['id'],
+                                                fb_profile['email'])
                 user.first_name = fb_profile['first_name']
                 user.last_name = fb_profile['last_name']
+                # with django-primate User has one field called 'name' instead
+                # of first_name and last_name
+                user.name = u'%s %s' % (user.first_name, user.last_name)
                 user.save()
 
                 # Create the FacebookProfile
@@ -80,7 +70,6 @@ class FacebookBackend:
                                           facebook_id=fb_profile['id'],
                                           access_token=access_token)
                 fb_user.save()
-
         return user
 
     def get_user(self, user_id):
