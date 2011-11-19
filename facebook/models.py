@@ -19,12 +19,11 @@ class FacebookProfile(models.Model):
         return data
 
     def get_facebook_picture(self):
-        return u'http://graph.facebook.com/%s/picture?type=large' % self.facebook_id
+        return u'http://graph.facebook.com/%s/picture?type=large' \
+                                                            % self.facebook_id
 
     def save(self):
         # updates user avatar
-        result = super(FacebookProfile, self).save()
+        super(FacebookProfile, self).save()
         self.user.avatar = self.get_facebook_picture()
         self.user.save()
-
-        return result
