@@ -4,7 +4,6 @@ import json
 
 from django.conf import settings
 from django.contrib.auth.models import User, AnonymousUser
-from django.db import IntegrityError
 from django.core.urlresolvers import reverse
 
 from facebook.models import FacebookProfile
@@ -46,7 +45,7 @@ class FacebookBackend:
             if getattr(settings, 'FACEBOOK_FORCE_SIGNUP', False):
                 # No existing user, use anonymous
                 user = AnonymousUser()
-                user.username = username
+                user.username = fb_profile['username']
                 user.first_name = fb_profile['first_name']
                 user.last_name = fb_profile['last_name']
                 fb_user = FacebookProfile(
